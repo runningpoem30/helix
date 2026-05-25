@@ -18,6 +18,11 @@ public record HelixConfig(
 
     public static final String VERSION = "0.1.0";
 
+    /** Minimal config for unit/integration tests. */
+    public static HelixConfig forTest(int port) {
+        return new HelixConfig("127.0.0.1", port, 4, 65_536, 512, 512 * 1024, false, 2);
+    }
+
     public static HelixConfig fromEnvironment() {
         return new HelixConfig(
                 env("HELIX_BIND", "127.0.0.1"),

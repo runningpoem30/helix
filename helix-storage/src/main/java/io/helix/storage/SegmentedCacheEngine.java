@@ -26,9 +26,7 @@ public final class SegmentedCacheEngine implements CacheEngine {
     @Override
     public void set(Key key, byte[] value) {
         Segment segment = segmentFor(key);
-        boolean isNew = !segment.exists(key);
-        segment.set(key, value);
-        if (isNew) {
+        if (segment.set(key, value)) {
             totalKeys.incrementAndGet();
         }
     }

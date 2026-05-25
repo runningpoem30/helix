@@ -11,4 +11,11 @@
     <artifactId>helix-core</artifactId>
     <name>Helix Core</name>
     <description>Commands, responses, configuration, protocol types</description>
+    <dependencies>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
 </project>

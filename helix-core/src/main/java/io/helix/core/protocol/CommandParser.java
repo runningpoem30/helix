@@ -3,12 +3,12 @@ package io.helix.core.protocol;
 import io.helix.core.HelixConfig;
 import io.helix.core.Key;
 import io.helix.core.command.Command;
-import io.helix.core.command.Command.DeleteCommand;
-import io.helix.core.command.Command.ExistsCommand;
-import io.helix.core.command.Command.GetCommand;
-import io.helix.core.command.Command.PingCommand;
-import io.helix.core.command.Command.QuitCommand;
-import io.helix.core.command.Command.SetCommand;
+import io.helix.core.command.DeleteCommand;
+import io.helix.core.command.ExistsCommand;
+import io.helix.core.command.GetCommand;
+import io.helix.core.command.PingCommand;
+import io.helix.core.command.QuitCommand;
+import io.helix.core.command.SetCommand;
 import java.util.function.Function;
 import io.helix.core.response.ErrorResponse;
 

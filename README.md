@@ -12,20 +12,32 @@ Helix is infrastructure software: a TCP-native, Netty-driven cache server with e
 | In-memory KV engine with eviction/TTL | Redis tutorial clone |
 | Concurrency + memory engineering showcase | Generic microservice demo |
 
-## Quick start (after Phase 1)
+## Quick start
 
 ```bash
 # Build
 mvn -q -pl helix-server -am package
 
-# Run (default port 6379)
+# Run (default port 6379, bind 127.0.0.1)
 java -jar helix-server/target/helix-server.jar
 
-# Demo
+# Or with env
+HELIX_BIND=0.0.0.0 HELIX_PORT=6379 java -jar helix-server/target/helix-server.jar
+```
+
+**Telnet demo:**
+
+```
 telnet localhost 6379
+PING
 SET user:1 Arya
 GET user:1
+EXISTS user:1
+DELETE user:1
+QUIT
 ```
+
+**Phase 1 commands:** `PING`, `SET`, `GET`, `DELETE`/`DEL`, `EXISTS`, `QUIT`
 
 ## Repository layout
 
@@ -73,8 +85,8 @@ Spring Boot is intentionally **out of the hot path**. Optional later: `helix-adm
 
 | Phase | Scope | Status |
 |-------|--------|--------|
-| 0 | Architecture & scaffold | **Current** |
-| 1 | Netty TCP, SET/GET, storage | Planned |
+| 0 | Architecture & scaffold | Done |
+| 1 | Netty TCP, SET/GET, storage | **Done** |
 | 2 | TTL, concurrency hardening | Planned |
 | 3 | Eviction policies, memory limits | Planned |
 | 4 | Metrics, JMH benchmarks | Planned |

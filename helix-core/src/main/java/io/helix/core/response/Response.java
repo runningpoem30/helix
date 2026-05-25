@@ -5,6 +5,5 @@ package io.helix.core.response;
  */
 public sealed interface Response
         permits SimpleResponse, ErrorResponse, BulkResponse, IntegerResponse, CloseConnectionResponse {
-
     byte[] encode();
 }

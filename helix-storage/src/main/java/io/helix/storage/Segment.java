@@ -2,6 +2,7 @@ package io.helix.storage;
 
 import io.helix.core.Key;
 
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -16,13 +17,15 @@ final class Segment {
         return Optional.ofNullable(data.get(key));
     }
 
-    void set(Key key, byte[] value) {
+    /** @return true if this was a new key */
+    boolean set(Key key, byte[] value) {
         byte[] previous = data.put(key, value);
         long delta = entryBytes(key, value);
         if (previous != null) {
             delta -= entryBytes(key, previous);
         }
         bytes.addAndGet(delta);
+        return previous == null;
     }
 
     boolean delete(Key key) {

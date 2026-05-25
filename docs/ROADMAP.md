@@ -17,7 +17,7 @@ Incremental delivery. Each phase ends with a **demoable** terminal session and t
 
 ---
 
-## Phase 1 — TCP + basic storage (2–3 weeks)
+## Phase 1 — TCP + basic storage ✅
 
 ### Scope
 
@@ -28,16 +28,16 @@ Incremental delivery. Each phase ends with a **demoable** terminal session and t
 
 ### Tasks
 
-| # | Task | Module |
-|---|------|--------|
-| 1 | Parent POM, Java 21, dependency management | root |
-| 2 | `Command` / `Response` types | helix-core |
-| 3 | `HelixLineDecoder`, `HelixCommandDecoder`, encoder | helix-network |
-| 4 | `HelixServer`, `HelixCommandHandler` | helix-server |
-| 5 | `SegmentedCacheEngine` minimal | helix-storage |
-| 6 | `HelixMain` + config from env | helix-server |
-| 7 | Unit tests for parser + storage | all |
-| 8 | `docker/Dockerfile` builds | docker |
+| # | Task | Module | Status |
+|---|------|--------|--------|
+| 1 | Parent POM, Java 21, dependency management | root | ✅ |
+| 2 | `Command` / `Response` types | helix-core | ✅ |
+| 3 | `HelixLineDecoder`, `HelixCommandDecoder`, encoder | helix-network | ✅ |
+| 4 | `HelixServer`, `HelixCommandHandler` | helix-server | ✅ |
+| 5 | `SegmentedCacheEngine` minimal | helix-storage | ✅ |
+| 6 | `HelixMain` + config from env | helix-server | ✅ |
+| 7 | Unit tests for parser + storage | all | ✅ |
+| 8 | `docker/Dockerfile` builds | docker | ✅ |
 
 ### Demo
 

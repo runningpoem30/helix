@@ -1,12 +1,12 @@
 package io.helix.storage;
 
 import io.helix.core.command.Command;
-import io.helix.core.command.Command.DeleteCommand;
-import io.helix.core.command.Command.ExistsCommand;
-import io.helix.core.command.Command.GetCommand;
-import io.helix.core.command.Command.PingCommand;
-import io.helix.core.command.Command.QuitCommand;
-import io.helix.core.command.Command.SetCommand;
+import io.helix.core.command.DeleteCommand;
+import io.helix.core.command.ExistsCommand;
+import io.helix.core.command.GetCommand;
+import io.helix.core.command.PingCommand;
+import io.helix.core.command.QuitCommand;
+import io.helix.core.command.SetCommand;
 import io.helix.core.response.BulkResponse;
 import io.helix.core.response.CloseConnectionResponse;
 import io.helix.core.response.IntegerResponse;
@@ -32,8 +32,8 @@ public final class CacheService {
     public Response execute(Command command) {
         metrics.recordRequest();
         return switch (command) {
-            case PingCommand _ -> SimpleResponse.PONG;
-            case QuitCommand _ -> new CloseConnectionResponse();
+            case PingCommand ping -> SimpleResponse.PONG;
+            case QuitCommand quit -> new CloseConnectionResponse();
             case SetCommand set -> executeSet(set);
             case GetCommand get -> executeGet(get);
             case DeleteCommand del -> executeDelete(del);
