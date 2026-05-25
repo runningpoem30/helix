@@ -1,0 +1,18 @@
+services:
+  helix:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    ports:
+      - "6379:6379"
+    environment:
+      HELIX_PORT: "6379"
+      HELIX_BIND: "0.0.0.0"
+      HELIX_MAXMEMORY: "512mb"
+      HELIX_EVICTION: "lru"
+      HELIX_SEGMENTS: "256"
+    deploy:
+      resources:
+        limits:
+          memory: 768M
+    restart: unless-stopped

@@ -57,6 +57,7 @@ helix/
 9. [Deployment](docs/DEPLOYMENT.md) — Docker, GCP VM, scaling
 10. [Roadmap](docs/ROADMAP.md) — phased implementation plan
 11. [Recruiter Demo](docs/RECRUITER_DEMO.md) — how to present Helix in interviews
+12. [Cache-Aside](docs/CACHE_ASIDE.md) — application integration pattern
 
 ## Tech stack
 
