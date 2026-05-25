@@ -13,6 +13,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.InetSocketAddress;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Netty TCP server bootstrap for Helix.
@@ -23,14 +26,35 @@ public final class NettyHelixServer implements AutoCloseable {
 
     private final HelixConfig config;
     private final CacheService cacheService;
+    private final ExecutorService storageExecutor;
+    private final boolean ownsExecutor;
 
     private EventLoopGroup bossGroup;
     private EventLoopGroup workerGroup;
     private Channel serverChannel;
 
     public NettyHelixServer(HelixConfig config, CacheService cacheService) {
+        this(config, cacheService, Executors.newFixedThreadPool(config.storageThreads(), r -> {
+            Thread t = new Thread(r, "helix-storage");
+            t.setDaemon(true);
+            return t;
+        }), true);
+    }
+
+    public NettyHelixServer(
+            HelixConfig config, CacheService cacheService, ExecutorService storageExecutor) {
+        this(config, cacheService, storageExecutor, false);
+    }
+
+    private NettyHelixServer(
+            HelixConfig config,
+            CacheService cacheService,
+            ExecutorService storageExecutor,
+            boolean ownsExecutor) {
         this.config = config;
         this.cacheService = cacheService;
+        this.storageExecutor = storageExecutor;
+        this.ownsExecutor = ownsExecutor;
     }
 
     public void start() throws InterruptedException {
@@ -43,7 +67,7 @@ public final class NettyHelixServer implements AutoCloseable {
                 .option(ChannelOption.SO_BACKLOG, 1024)
                 .childOption(ChannelOption.TCP_NODELAY, true)
                 .childOption(ChannelOption.SO_KEEPALIVE, true)
-                .childHandler(new HelixChannelInitializer(config, cacheService));
+                .childHandler(new HelixChannelInitializer(config, cacheService, storageExecutor));
 
         InetSocketAddress bind = config.bindAddress();
         ChannelFuture bindFuture = bootstrap.bind(bind).sync();
@@ -58,7 +82,6 @@ public final class NettyHelixServer implements AutoCloseable {
         return ((InetSocketAddress) serverChannel.localAddress()).getPort();
     }
 
-    /** Blocks until the server socket is closed. */
     public void awaitShutdown() throws InterruptedException {
         if (serverChannel != null) {
             serverChannel.closeFuture().sync();
@@ -75,6 +98,14 @@ public final class NettyHelixServer implements AutoCloseable {
         }
         if (bossGroup != null) {
             bossGroup.shutdownGracefully().syncUninterruptibly();
+        }
+        if (ownsExecutor) {
+            storageExecutor.shutdown();
+            try {
+                storageExecutor.awaitTermination(5, TimeUnit.SECONDS);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
         }
         log.info("Helix server stopped");
     }

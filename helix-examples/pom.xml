@@ -10,5 +10,22 @@
     </parent>
     <artifactId>helix-examples</artifactId>
     <name>Helix Examples</name>
-    <description>Cache-aside pattern demonstration client</description>
+    <dependencies>
+        <dependency>
+            <groupId>io.helix</groupId>
+            <artifactId>helix-cluster</artifactId>
+        </dependency>
+    </dependencies>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>3.5.0</version>
+                <configuration>
+                    <mainClass>io.helix.examples.CacheAsideDemo</mainClass>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 </project>

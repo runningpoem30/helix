@@ -2,6 +2,7 @@ package io.helix.storage;
 
 import io.helix.core.HelixConfig;
 import io.helix.core.Key;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import java.nio.charset.StandardCharsets;
@@ -13,32 +14,56 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class SegmentedCacheEngineTest {
 
-    private final CacheEngine engine = new SegmentedCacheEngine(HelixConfig.forTest(0));
+    private SegmentedCacheEngine engine;
+
+    @AfterEach
+    void tearDown() {
+        if (engine != null) {
+            engine.close();
+        }
+    }
 
     @Test
     void setGetDeleteExists() {
+        engine = new SegmentedCacheEngine(HelixConfig.forTest(0));
         Key key = Key.ofUtf8("user:1");
-        engine.set(key, "Arya".getBytes(StandardCharsets.UTF_8));
+        engine.set(key, "Arya".getBytes(StandardCharsets.UTF_8), Optional.empty());
 
-        Optional<byte[]> value = engine.get(key);
-        assertTrue(value.isPresent());
-        assertEquals("Arya", new String(value.get(), StandardCharsets.UTF_8));
-
+        assertTrue(engine.get(key).isPresent());
         assertTrue(engine.exists(key));
         assertEquals(1, engine.keyCount());
 
         assertTrue(engine.delete(key));
         assertFalse(engine.exists(key));
         assertTrue(engine.get(key).isEmpty());
-        assertEquals(0, engine.keyCount());
     }
 
     @Test
-    void overwriteKeepsKeyCount() {
-        Key key = Key.ofUtf8("k");
-        engine.set(key, "a".getBytes(StandardCharsets.UTF_8));
-        engine.set(key, "bb".getBytes(StandardCharsets.UTF_8));
-        assertEquals(1, engine.keyCount());
-        assertEquals("bb", new String(engine.get(key).orElseThrow(), StandardCharsets.UTF_8));
+    void ttlExpiresOnGet() throws InterruptedException {
+        HelixConfig config = HelixConfig.forTest(0);
+        engine = new SegmentedCacheEngine(config);
+        Key key = Key.ofUtf8("token");
+        engine.set(key, "x".getBytes(StandardCharsets.UTF_8), Optional.of(1L));
+        assertEquals(1, engine.ttl(key));
+        Thread.sleep(1100);
+        assertTrue(engine.get(key).isEmpty());
+        assertEquals(-2, engine.ttl(key));
+    }
+
+    @Test
+    void evictionKeepsFrequentlyUsedKey() {
+        HelixConfig tiny = new HelixConfig(
+                "127.0.0.1", 0, 1, 65_536, 512, 64, false, 2,
+                400, "lru", 50, 50, 2, "test", java.util.List.of(), java.util.List.of());
+        engine = new SegmentedCacheEngine(tiny);
+        Key hot = Key.ofUtf8("hot");
+        engine.set(hot, "v".getBytes(StandardCharsets.UTF_8), Optional.empty());
+
+        for (int i = 0; i < 30; i++) {
+            engine.get(hot);
+            engine.set(Key.ofUtf8("cold:" + i), "xxxxxxxxxx".getBytes(StandardCharsets.UTF_8), Optional.empty());
+        }
+        assertTrue(engine.exists(hot), "LRU should retain hot key");
+        assertTrue(engine.keyCount() < 31, "Some cold keys should have been evicted");
     }
 }

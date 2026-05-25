@@ -49,7 +49,7 @@ class HelixServerIntegrationTest {
 
             out.write("SET user:1 Arya\r\n".getBytes(StandardCharsets.UTF_8));
             out.flush();
-            String setLine = in.readLine();
+            String setLine = readLineSkippingComments(in);
             assertTrue(setLine != null && setLine.contains("OK"), "set response: " + setLine);
 
             out.write("GET user:1\r\n".getBytes(StandardCharsets.UTF_8));
@@ -62,6 +62,16 @@ class HelixServerIntegrationTest {
             out.write("QUIT\r\n".getBytes(StandardCharsets.UTF_8));
             out.flush();
         }
+    }
+
+    private static String readLineSkippingComments(BufferedReader in) throws Exception {
+        String line;
+        while ((line = in.readLine()) != null) {
+            if (!line.startsWith("#")) {
+                return line;
+            }
+        }
+        return null;
     }
 
     private static void drainBanner(BufferedReader in) throws Exception {

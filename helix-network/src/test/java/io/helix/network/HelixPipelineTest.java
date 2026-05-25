@@ -22,7 +22,8 @@ class HelixPipelineTest {
         CacheEngine engine = new SegmentedCacheEngine(config);
         CacheService service = new CacheService(engine, new CacheMetrics());
 
-        EmbeddedChannel channel = new EmbeddedChannel(new HelixChannelInitializer(config, service));
+        EmbeddedChannel channel = new EmbeddedChannel(
+                new HelixChannelInitializer(config, service, DirectExecutorService.create()));
 
         channel.writeInbound(Unpooled.copiedBuffer("SET user:1 Arya\n", StandardCharsets.UTF_8));
         Object setResponse = channel.readOutbound();

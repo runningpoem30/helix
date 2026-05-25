@@ -17,7 +17,15 @@
         </dependency>
         <dependency>
             <groupId>io.helix</groupId>
+            <artifactId>helix-eviction</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.helix</groupId>
             <artifactId>helix-metrics</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.helix</groupId>
+            <artifactId>helix-cluster</artifactId>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>

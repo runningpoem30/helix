@@ -1,0 +1,27 @@
+services:
+  helix-node-1:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    ports:
+      - "6379:6379"
+    environment:
+      HELIX_NODE_ID: node-1
+      HELIX_BIND: 0.0.0.0
+      HELIX_PORT: 6379
+      HELIX_MAXMEMORY: 128mb
+      HELIX_EVICTION: lru
+      HELIX_REPLICA_PEERS: helix-node-2:6379
+
+  helix-node-2:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    ports:
+      - "6380:6379"
+    environment:
+      HELIX_NODE_ID: node-2
+      HELIX_BIND: 0.0.0.0
+      HELIX_PORT: 6379
+      HELIX_MAXMEMORY: 128mb
+      HELIX_EVICTION: lru

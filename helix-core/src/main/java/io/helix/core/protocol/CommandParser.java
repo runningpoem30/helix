@@ -5,15 +5,18 @@ import io.helix.core.Key;
 import io.helix.core.command.Command;
 import io.helix.core.command.DeleteCommand;
 import io.helix.core.command.ExistsCommand;
+import io.helix.core.command.ExpireCommand;
 import io.helix.core.command.GetCommand;
+import io.helix.core.command.InfoCommand;
 import io.helix.core.command.PingCommand;
 import io.helix.core.command.QuitCommand;
 import io.helix.core.command.SetCommand;
-import java.util.function.Function;
+import io.helix.core.command.TtlCommand;
 import io.helix.core.response.ErrorResponse;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
+import java.util.function.Function;
 
 /**
  * Parses a single line into a {@link Command} or error message.
@@ -43,12 +46,37 @@ public final class CommandParser {
             case "QUIT" -> remainder.isEmpty()
                     ? ParseResult.ok(new QuitCommand())
                     : ParseResult.error(ErrorResponse.syntax());
+            case "INFO" -> ParseResult.ok(new InfoCommand());
             case "GET" -> parseUnaryKey(remainder, GetCommand::new);
             case "DELETE", "DEL" -> parseUnaryKey(remainder, DeleteCommand::new);
             case "EXISTS" -> parseUnaryKey(remainder, ExistsCommand::new);
+            case "TTL" -> parseUnaryKey(remainder, TtlCommand::new);
+            case "EXPIRE" -> parseExpire(remainder);
             case "SET" -> parseSet(remainder);
             default -> ParseResult.error(ErrorResponse.unknownCommand(cmdName));
         };
+    }
+
+    private ParseResult parseExpire(String remainder) {
+        int space = remainder.lastIndexOf(' ');
+        if (space < 0) {
+            return ParseResult.error(ErrorResponse.syntax());
+        }
+        String keyStr = remainder.substring(0, space).trim();
+        String secondsStr = remainder.substring(space + 1).trim();
+        Optional<ErrorResponse> keyError = validateKeyUtf8(keyStr);
+        if (keyError.isPresent()) {
+            return ParseResult.error(keyError.get());
+        }
+        try {
+            long seconds = Long.parseLong(secondsStr);
+            if (seconds <= 0) {
+                return ParseResult.error(ErrorResponse.syntax());
+            }
+            return ParseResult.ok(new ExpireCommand(Key.ofUtf8(keyStr), seconds));
+        } catch (NumberFormatException e) {
+            return ParseResult.error(ErrorResponse.syntax());
+        }
     }
 
     private ParseResult parseUnaryKey(String remainder, Function<Key, Command> factory) {
@@ -71,13 +99,28 @@ public final class CommandParser {
             return ParseResult.error(ErrorResponse.syntax());
         }
         String keyStr = remainder.substring(0, firstSpace);
-        String valueStr = remainder.substring(firstSpace + 1);
+        String rest = remainder.substring(firstSpace + 1).trim();
+
+        Optional<Long> ttl = Optional.empty();
+        String valueStr = rest;
+
+        if (rest.contains(" EX ")) {
+            int exIndex = rest.lastIndexOf(" EX ");
+            valueStr = rest.substring(0, exIndex).trim();
+            String ttlStr = rest.substring(exIndex + 4).trim();
+            try {
+                long seconds = Long.parseLong(ttlStr);
+                if (seconds <= 0) {
+                    return ParseResult.error(ErrorResponse.syntax());
+                }
+                ttl = Optional.of(seconds);
+            } catch (NumberFormatException e) {
+                return ParseResult.error(ErrorResponse.syntax());
+            }
+        }
+
         if (valueStr.isEmpty()) {
             return ParseResult.error(ErrorResponse.syntax());
-        }
-        // Phase 2: EX ttl — reject in Phase 1 with clear error if present
-        if (valueStr.contains(" EX ") || valueStr.endsWith(" EX")) {
-            return ParseResult.error(new ErrorResponse("EX option not supported yet (Phase 2)"));
         }
 
         Optional<ErrorResponse> keyError = validateKeyUtf8(keyStr);
@@ -88,7 +131,7 @@ public final class CommandParser {
         if (valueBytes.length > config.maxValueBytes()) {
             return ParseResult.error(ErrorResponse.valueTooLarge());
         }
-        return ParseResult.ok(new SetCommand(Key.ofUtf8(keyStr), valueBytes));
+        return ParseResult.ok(new SetCommand(Key.ofUtf8(keyStr), valueBytes, ttl));
     }
 
     private Optional<ErrorResponse> validateKeyUtf8(String keyStr) {

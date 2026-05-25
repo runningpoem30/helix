@@ -1,9 +1,11 @@
 package io.helix.core.protocol;
 
 import io.helix.core.HelixConfig;
+import io.helix.core.command.ExpireCommand;
 import io.helix.core.command.GetCommand;
 import io.helix.core.command.PingCommand;
 import io.helix.core.command.SetCommand;
+import io.helix.core.command.TtlCommand;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -33,6 +35,7 @@ class CommandParserTest {
         SetCommand setCmd = (SetCommand) set.command().get();
         assertEquals("user:1", setCmd.key().toString());
         assertEquals("Arya", new String(setCmd.value()));
+        assertTrue(setCmd.ttlSeconds().isEmpty());
 
         var get = parser.parse("GET user:1");
         assertTrue(get.command().isPresent());
@@ -40,15 +43,22 @@ class CommandParserTest {
     }
 
     @Test
+    void parsesSetWithEx() {
+        var set = parser.parse("SET token abc EX 5");
+        SetCommand cmd = (SetCommand) set.command().orElseThrow();
+        assertEquals(5L, cmd.ttlSeconds().orElseThrow());
+    }
+
+    @Test
+    void parsesExpireAndTtl() {
+        assertTrue(parser.parse("EXPIRE user:1 60").command().get() instanceof ExpireCommand);
+        assertTrue(parser.parse("TTL user:1").command().get() instanceof TtlCommand);
+    }
+
+    @Test
     void rejectsUnknownCommand() {
         var result = parser.parse("FOO bar");
         assertTrue(result.error().isPresent());
         assertTrue(result.error().get().encode()[0] == '-');
-    }
-
-    @Test
-    void rejectsExInPhase1() {
-        var result = parser.parse("SET key value EX 5");
-        assertTrue(result.error().isPresent());
     }
 }
