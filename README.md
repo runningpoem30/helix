@@ -51,7 +51,7 @@ helix/
 3. [Netty Design](docs/NETTY.md) — event loops, pipeline, handlers
 4. [Storage Engine](docs/STORAGE.md) — entries, sharding, memory accounting
 5. [Concurrency](docs/CONCURRENCY.md) — locks, stripes, read/write paths
-6. [TTL Engine](docs/docs/TTL.md) — expiration strategies (see docs/TTL.md)
+6. [TTL Engine](docs/TTL.md) — expiration strategies
 7. [Eviction](docs/EVICTION.md) — LRU/LFU/FIFO algorithms & tradeoffs
 8. [Benchmarking](docs/BENCHMARKING.md) — workloads, JMH, metrics
 9. [Deployment](docs/DEPLOYMENT.md) — Docker, GCP VM, scaling
