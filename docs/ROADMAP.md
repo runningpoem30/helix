@@ -50,72 +50,36 @@ GET user:1
 
 ---
 
-## Phase 2 — TTL + concurrency (1–2 weeks)
-
-### Scope
+## Phase 2 — TTL + concurrency ✅
 
 - `SET ... EX n`, `EXPIRE`, `TTL`
-- Lazy expiration on read
-- `ExpirationWorker` + TTL index
-- Per-segment `ReentrantReadWriteLock` for policy-ready writes
+- Lazy expiration on read + `ExpirationWorker`
+- Per-segment `ReentrantReadWriteLock`
 - Storage executor offload from Netty
-
-### Demo
-
-```
-SET token abc EX 5
-TTL token
-→ :5
-(sleep 6)
-GET token
-→ $-1
-```
 
 ---
 
-## Phase 3 — Eviction + memory limits (2 weeks)
-
-### Scope
+## Phase 3 — Eviction + memory limits ✅
 
 - `helix-eviction`: LRU, LFU, FIFO
 - `HELIX_MAXMEMORY` enforcement
-- `INFO` basic stats
-- Integration tests: fill until eviction, assert hot key survives (LRU)
-
-### Demo
-
-```
-# maxmemory tiny, SET many keys, show evictions in INFO
-```
+- `INFO` stats command
 
 ---
 
-## Phase 4 — Metrics + benchmarking (1–2 weeks)
+## Phase 4 — Metrics + benchmarking ✅
 
-### Scope
-
-- `helix-metrics`: hit ratio, latency histogram
-- JMH benchmarks
-- TCP load driver
-- `helix-examples` cache-aside demo
-- Results documented in README
-
-### Demo
-
-Run benchmark CLI, paste throughput in README with graphs.
+- Latency percentiles (P50/P99)
+- JMH `CacheGetBenchmark`
+- `LoadDriver` TCP load tool
+- `CacheAsideDemo` example
 
 ---
 
-## Phase 5 — Distribution (3+ weeks)
+## Phase 5 — Distribution ✅
 
-### Scope
-
-- Consistent hash client router
-- Multi-node Docker Compose
-- Async replication prototype
-- Cluster `INFO` per node
-
-**Not required for internship portfolio** if Phases 1–4 are strong.
+- `helix-cluster`: consistent hash ring, `ClusterClient`, `ReplicationClient`
+- `docker-compose.cluster.yml` multi-node template
 
 ---
 

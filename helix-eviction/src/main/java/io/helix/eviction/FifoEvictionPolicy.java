@@ -40,11 +40,11 @@ public final class FifoEvictionPolicy implements EvictionPolicy {
     @Override
     public List<Key> selectVictims(int count) {
         List<Key> victims = new ArrayList<>(Math.min(count, queue.size()));
-        while (!queue.isEmpty() && victims.size() < count) {
-            Key key = queue.pollFirst();
-            if (index.remove(key)) {
-                victims.add(key);
+        for (Key key : queue) {
+            if (victims.size() >= count) {
+                break;
             }
+            victims.add(key);
         }
         return victims;
     }

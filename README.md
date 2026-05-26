@@ -2,7 +2,7 @@
 
 High-performance distributed in-memory cache engine — built for systems engineering, not CRUD.
 
-Helix is infrastructure software: a TCP-native, Netty-driven cache server with explicit concurrency design, TTL expiration, pluggable eviction, and a path to clustering.
+Helix is infrastructure software: a TCP-native, Netty-driven cache server with segmented concurrent storage, TTL expiration, pluggable eviction (LRU/LFU/FIFO), metrics, and cluster routing.
 
 ## What this is
 
@@ -15,82 +15,103 @@ Helix is infrastructure software: a TCP-native, Netty-driven cache server with e
 ## Quick start
 
 ```bash
-# Build
 mvn -q -pl helix-server -am package
-
-# Run (default port 6379, bind 127.0.0.1)
 java -jar helix-server/target/helix-server.jar
-
-# Or with env
-HELIX_BIND=0.0.0.0 HELIX_PORT=6379 java -jar helix-server/target/helix-server.jar
 ```
 
-**Telnet demo:**
-
-```
+```bash
 telnet localhost 6379
 PING
 SET user:1 Arya
 GET user:1
-EXISTS user:1
-DELETE user:1
+SET session:xyz secret EX 300
+TTL session:xyz
+EXPIRE user:1 60
+INFO
 QUIT
 ```
 
-**Phase 1 commands:** `PING`, `SET`, `GET`, `DELETE`/`DEL`, `EXISTS`, `QUIT`
+## Commands
+
+| Command | Example |
+|---------|---------|
+| PING | `PING` |
+| SET | `SET key value` or `SET key value EX 60` |
+| GET | `GET key` |
+| DELETE | `DELETE key` / `DEL key` |
+| EXISTS | `EXISTS key` |
+| EXPIRE | `EXPIRE key 60` |
+| TTL | `TTL key` |
+| INFO | `INFO` |
+| QUIT | `QUIT` |
+
+## Configuration (environment)
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `HELIX_BIND` | 127.0.0.1 | Listen address |
+| `HELIX_PORT` | 6379 | TCP port |
+| `HELIX_MAXMEMORY` | 256mb | Eviction threshold |
+| `HELIX_EVICTION` | lru | `lru`, `lfu`, or `fifo` |
+| `HELIX_SEGMENTS` | 256 | Shard count (power of 2) |
+| `HELIX_TTL_TICK_MS` | 100 | Background expiration interval |
+| `HELIX_NODE_ID` | node-1 | Node identity (cluster) |
+| `HELIX_CLUSTER_PEERS` | — | Comma-separated `host:port` for client-side routing |
+| `HELIX_REPLICA_PEERS` | — | Async replication targets |
 
 ## Repository layout
 
 ```
 helix/
-├── helix-core/          # Domain types, commands, responses, config
-├── helix-storage/       # In-memory engine, TTL, concurrent access
-├── helix-eviction/      # LRU, LFU, FIFO policies
-├── helix-network/       # Netty pipeline, protocol codec, handlers
-├── helix-server/        # JVM entrypoint, wiring, lifecycle
-├── helix-metrics/       # Counters, latency histograms (Phase 4)
-├── helix-benchmark/       # JMH + load drivers (Phase 4)
-├── helix-examples/      # Cache-aside demo client
-├── helix-cli/           # Optional terminal client
-├── docker/              # Images, Compose
-└── docs/                # Architecture & design (start here)
+├── helix-core/       # Commands, responses, config, protocol
+├── helix-storage/    # Segmented engine, TTL, expiration worker
+├── helix-eviction/   # LRU, LFU, FIFO policies
+├── helix-network/    # Netty pipeline
+├── helix-metrics/    # Hit ratio, latency percentiles
+├── helix-cluster/    # Consistent hash, replication, TCP client
+├── helix-server/     # JVM entrypoint
+├── helix-benchmark/  # JMH + TCP load driver
+├── helix-examples/   # Cache-aside demo
+├── helix-cli/        # Interactive TCP client
+└── docs/             # Architecture & design
 ```
 
-## Documentation (read in order)
+## Benchmarks & examples
 
-1. [Architecture](docs/ARCHITECTURE.md) — system overview, data flow, phases
-2. [TCP Protocol](docs/PROTOCOL.md) — wire format, commands, errors
-3. [Netty Design](docs/NETTY.md) — event loops, pipeline, handlers
-4. [Storage Engine](docs/STORAGE.md) — entries, sharding, memory accounting
-5. [Concurrency](docs/CONCURRENCY.md) — locks, stripes, read/write paths
-6. [TTL Engine](docs/TTL.md) — expiration strategies
-7. [Eviction](docs/EVICTION.md) — LRU/LFU/FIFO algorithms & tradeoffs
-8. [Benchmarking](docs/BENCHMARKING.md) — workloads, JMH, metrics
-9. [Deployment](docs/DEPLOYMENT.md) — Docker, GCP VM, scaling
-10. [Roadmap](docs/ROADMAP.md) — phased implementation plan
-11. [Recruiter Demo](docs/RECRUITER_DEMO.md) — how to present Helix in interviews
-12. [Cache-Aside](docs/CACHE_ASIDE.md) — application integration pattern
+```bash
+# JMH in-process GET throughput
+mvn -q -pl helix-benchmark -am package
+java -jar helix-benchmark/target/helix-benchmark.jar  # LoadDriver default main
 
-## Tech stack
+# TCP load test (server must be running)
+java -cp helix-benchmark/target/helix-benchmark.jar io.helix.benchmark.LoadDriver localhost 6379 20 30 90
 
-- **Java 21** — virtual threads optional later; records, sealed types for commands
-- **Netty 4.x** — non-blocking TCP server
-- **Maven** multi-module monorepo
-- **JMH** (Phase 4) — microbenchmarks
-- **Docker / Compose** — local & cloud deployment
+# Cache-aside demo
+mvn -q -pl helix-examples exec:java
+```
 
-Spring Boot is intentionally **out of the hot path**. Optional later: `helix-admin` for metrics HTTP if needed.
+## Docker
+
+```bash
+docker compose -f docker/docker-compose.yml up --build
+# Multi-node cluster prototype:
+docker compose -f docker/docker-compose.cluster.yml up --build
+```
 
 ## Implementation status
 
 | Phase | Scope | Status |
 |-------|--------|--------|
 | 0 | Architecture & scaffold | Done |
-| 1 | Netty TCP, SET/GET, storage | **Done** |
-| 2 | TTL, concurrency hardening | Planned |
-| 3 | Eviction policies, memory limits | Planned |
-| 4 | Metrics, JMH benchmarks | Planned |
-| 5 | Distribution, replication | Planned |
+| 1 | Netty TCP, SET/GET, storage | Done |
+| 2 | TTL, EXPIRE, background worker | Done |
+| 3 | LRU/LFU/FIFO, maxmemory, INFO | Done |
+| 4 | Metrics, JMH, load driver, cache-aside | Done |
+| 5 | Consistent hash, replication, cluster compose | Done |
+
+## Documentation
+
+See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) and [docs/ROADMAP.md](docs/ROADMAP.md).
 
 ## License
 

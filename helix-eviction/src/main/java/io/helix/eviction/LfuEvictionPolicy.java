@@ -83,8 +83,6 @@ public final class LfuEvictionPolicy implements EvictionPolicy {
                 continue;
             }
             Key key = bucket.iterator().next();
-            bucket.remove(key);
-            nodes.remove(key);
             victims.add(key);
         }
         return victims;

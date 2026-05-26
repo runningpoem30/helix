@@ -39,10 +39,11 @@ public final class LruEvictionPolicy implements EvictionPolicy {
     @Override
     public List<Key> selectVictims(int count) {
         List<Key> victims = new ArrayList<>(Math.min(count, order.size()));
-        var it = order.keySet().iterator();
-        while (it.hasNext() && victims.size() < count) {
-            victims.add(it.next());
-            it.remove();
+        for (Key key : order.keySet()) {
+            if (victims.size() >= count) {
+                break;
+            }
+            victims.add(key);
         }
         return victims;
     }

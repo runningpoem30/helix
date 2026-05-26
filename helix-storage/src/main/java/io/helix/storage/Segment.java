@@ -117,6 +117,7 @@ final class Segment {
             if (victims.isEmpty()) {
                 break;
             }
+            int removedCount = 0;
             for (Key victim : victims) {
                 if (victim.equals(inserting)) {
                     continue;
@@ -126,7 +127,11 @@ final class Segment {
                     bytes.addAndGet(-entryBytes(victim, removed.value()));
                     eviction.onRemove(victim);
                     evicted.add(victim);
+                    removedCount++;
                 }
+            }
+            if (removedCount == 0) {
+                break;
             }
         }
         return evicted;
