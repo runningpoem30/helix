@@ -14,8 +14,7 @@ Helix is infrastructure software: a TCP-native, Netty-driven cache server with s
 
 ## Documentation
 
-See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) and [docs/ROADMAP.md](docs/ROADMAP.md).
-
+See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
 ## Quick start
 
 ```bash
