@@ -1,6 +1,6 @@
 # Helix
 
-High-performance distributed in-memory cache engine — built for systems engineering, not CRUD.
+High-performance distributed in-memory cache engine — built for systems engineering.
 
 Helix is infrastructure software: a TCP-native, Netty-driven cache server with segmented concurrent storage, TTL expiration, pluggable eviction (LRU/LFU/FIFO), metrics, and cluster routing.
 
