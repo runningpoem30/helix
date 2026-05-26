@@ -6,11 +6,11 @@ Helix is infrastructure software: a TCP-native, Netty-driven cache server with s
 
 ## What this is
 
-| Helix is | Helix is not |
-|----------|----------------|
-| TCP protocol + Netty event-loop server | REST-first Spring Boot app |
-| In-memory KV engine with eviction/TTL | Redis tutorial clone |
-| Concurrency + memory engineering showcase | Generic microservice demo |
+| Helix is |
+|----------|
+| TCP protocol + Netty event-loop server | 
+| In-memory KV engine with eviction/TTL |
+| Concurrency + memory engineering showcase | 
 
 ## Documentation
 
