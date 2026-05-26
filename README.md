@@ -12,6 +12,10 @@ Helix is infrastructure software: a TCP-native, Netty-driven cache server with s
 | In-memory KV engine with eviction/TTL | Redis tutorial clone |
 | Concurrency + memory engineering showcase | Generic microservice demo |
 
+## Documentation
+
+See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) and [docs/ROADMAP.md](docs/ROADMAP.md).
+
 ## Quick start
 
 ```bash
@@ -98,20 +102,8 @@ docker compose -f docker/docker-compose.yml up --build
 docker compose -f docker/docker-compose.cluster.yml up --build
 ```
 
-## Implementation status
 
-| Phase | Scope | Status |
-|-------|--------|--------|
-| 0 | Architecture & scaffold | Done |
-| 1 | Netty TCP, SET/GET, storage | Done |
-| 2 | TTL, EXPIRE, background worker | Done |
-| 3 | LRU/LFU/FIFO, maxmemory, INFO | Done |
-| 4 | Metrics, JMH, load driver, cache-aside | Done |
-| 5 | Consistent hash, replication, cluster compose | Done |
 
-## Documentation
-
-See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) and [docs/ROADMAP.md](docs/ROADMAP.md).
 
 ## License
 
